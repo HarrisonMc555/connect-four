@@ -1,0 +1,6 @@
+[package]
+name = "connect-four"
+version = "0.1.0"
+authors = ["Harrison McCullough <mccullough.harrison@gmail.com>"]
+
+[dependencies]
