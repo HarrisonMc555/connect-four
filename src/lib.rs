@@ -1,6 +1,3 @@
-// use std::error::Error;
-// use std::fmt;
-
 pub const NUM_ROWS: usize = 6;
 pub const NUM_COLS: usize = 7;
 pub const NUM_IN_ROW: usize = 4;
@@ -15,11 +12,7 @@ pub enum Error {
     GameOver,
 }
 
-#[derive (Copy, Clone, PartialEq, Debug)]
-pub enum Cell {
-    Empty,
-    Filled(Team),
-}
+type Cell = Option<Team>;
 
 #[derive (Copy, Clone, PartialEq, Debug)]
 pub enum Team {
@@ -35,7 +28,7 @@ pub struct GameState {
 impl GameState {
     pub fn new(first_turn: Team) -> GameState {
         GameState {
-            cells: [[Cell::Empty; NUM_COLS]; NUM_ROWS],
+            cells: [[None; NUM_COLS]; NUM_ROWS],
             cur_turn: first_turn,
         }
     }
@@ -90,9 +83,9 @@ impl GameState {
 
     fn cell_to_char(cell: Cell) -> char {
         match cell {
-            Cell::Filled(Team::Team1) => 'O',
-            Cell::Filled(Team::Team2) => 'X',
-            Cell::Empty => '_',
+            Some(Team::Team1) => 'O',
+            Some(Team::Team2) => 'X',
+            None => '_',
         }
     }
 
@@ -109,7 +102,7 @@ impl GameState {
                 return Err(Error::OutOfBounds);
             }
             let row = self.highest_unfilled_row(col)?;
-            self.cells[row][col] = Cell::Filled(self.cur_turn);
+            self.cells[row][col] = Some(self.cur_turn);
             Ok(())
         }
 
@@ -117,9 +110,8 @@ impl GameState {
         Result<usize, Error> {
             self.cells
                 .iter()
-                // .rev() // Search bottom to top
                 .enumerate()
-                .find(|(_, row)| row[col] == Cell::Empty)
+                .find(|(_, row)| row[col] == None)
                 .map(|(index, _)| index)
                 .ok_or(Error::ColumnFull)
         }
@@ -129,7 +121,7 @@ impl GameState {
             .windows(NUM_IN_ROW)
             .any(|rows| (0..NUM_COLS)
                  .any(|index| rows.iter()
-                      .all(|row| row[index] == Cell::Filled(team))))
+                      .all(|row| row[index] == Some(team))))
     }
 
     fn has_won_horizontally(&self, team: Team) -> bool {
@@ -138,7 +130,7 @@ impl GameState {
             .any(|row|
                  row.windows(NUM_IN_ROW)
                  .any(|slice| slice.iter()
-                      .all(|&c| c == Cell::Filled(team))))
+                      .all(|&c| c == Some(team))))
     }
 
     fn has_won_diagonally(&self, team: Team) -> bool {
@@ -148,6 +140,6 @@ impl GameState {
                  .any(|offset| rows.iter()
                       .enumerate()
                       .all(|(index, row)|
-                           row[index + offset] == Cell::Filled(team))))
+                           row[index + offset] == Some(team))))
     }
 }
