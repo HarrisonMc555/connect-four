@@ -137,7 +137,8 @@ impl GameState {
             .iter()
             .any(|row|
                  row.windows(NUM_IN_ROW)
-                 .any(|slice| slice.iter().all(|&c| c == Cell::Filled(team))))
+                 .any(|slice| slice.iter()
+                      .all(|&c| c == Cell::Filled(team))))
     }
 
     fn has_won_diagonally(&self, team: Team) -> bool {
