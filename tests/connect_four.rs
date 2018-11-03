@@ -44,14 +44,32 @@ fn win_horizontally() -> Result<(), Error> {
 }
 
 #[test]
-fn invalid_drop() {
+fn drop_out_of_bounds() {
     let mut game = GameState::new(Team::Team1);
     let result = game.drop_chip(NUM_COLS);
-    assert!(result.is_err());
+    assert_eq!(result, Err(Error::OutOfBounds));
     let result = game.drop_chip(NUM_COLS + 1);
-    assert!(result.is_err());
+    assert_eq!(result, Err(Error::OutOfBounds));
     let result = game.drop_chip(NUM_COLS*2 + 1);
-    assert!(result.is_err());
+    assert_eq!(result, Err(Error::OutOfBounds));
+}
+
+#[test]
+fn drop_in_full_column() {
+    let mut game = GameState::new(Team::Team1);
+    for _ in 0..NUM_ROWS {
+        let result = game.drop_chip(0);
+        assert!(result.is_ok());
+    }
+    // Column should be filled, now should overflow
+    let result = game.drop_chip(0);
+    assert_eq!(result, Err(Error::GridFull));
+    // If we try again, we should get the same error
+    let result = game.drop_chip(0);
+    assert_eq!(result, Err(Error::GridFull));
+    // If we try a different column, it should be fine
+    let result = game.drop_chip(1);
+    assert!(result.is_ok());
 }
 
 #[test]

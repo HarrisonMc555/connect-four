@@ -7,7 +7,7 @@ pub const NUM_IN_ROW: usize = 4;
 
 pub type Grid = [[Cell; NUM_COLS]; NUM_ROWS];
 
-#[derive (Copy, Clone, Debug)]
+#[derive (Copy, Clone, Debug, PartialEq)]
 pub enum Error {
     OutOfBounds,
     GridFull,
