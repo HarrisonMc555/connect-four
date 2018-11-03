@@ -44,6 +44,24 @@ fn win_horizontally() -> Result<(), Error> {
 }
 
 #[test]
+fn win_vertically() -> Result<(), Error> {
+    let mut game = GameState::new(Team::Team1);
+    for i in 0..NUM_IN_ROW {
+        // Team 1
+        game.drop_chip(0)?;
+        // Team 2
+        if i < NUM_IN_ROW - 1 {
+            game.drop_chip(1)?;
+        }
+    }
+    // Team 1 should have won
+    assert!(game.game_over());
+    assert!(game.has_won(Team::Team1));
+    assert_eq!(game.who_won(), Some(Team::Team1));
+    Ok(())
+}
+
+#[test]
 fn drop_out_of_bounds() {
     let mut game = GameState::new(Team::Team1);
     let result = game.drop_chip(NUM_COLS);

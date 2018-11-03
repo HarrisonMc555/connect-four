@@ -124,13 +124,12 @@ impl GameState {
                 .ok_or(Error::ColumnFull)
         }
 
-    fn has_won_vertically(&self, _team: Team) -> bool {
-        // (0..)
-        // self.cells
-        //     .windows(NUM_IN_ROW)
-        //     .map(|rows| rows.for_each())
-        //     ;
-        false
+    fn has_won_vertically(&self, team: Team) -> bool {
+        self.cells
+            .windows(NUM_IN_ROW)
+            .any(|rows| (0..NUM_COLS)
+                 .any(|index| rows.iter()
+                      .all(|row| row[index] == Cell::Filled(team))))
     }
 
     fn has_won_horizontally(&self, team: Team) -> bool {
