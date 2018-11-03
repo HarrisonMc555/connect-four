@@ -73,6 +73,22 @@ fn drop_in_full_column() {
 }
 
 #[test]
+fn no_drops_after_game_over() -> Result<(), Error> {
+    let mut game = GameState::new(Team::Team1);
+    for i in 0..NUM_IN_ROW {
+        // Team 1
+        game.drop_chip(i)?;
+        if i < NUM_IN_ROW - 1 {
+            // Team 2
+            game.drop_chip(i)?;
+        }
+    }
+    let result = game.drop_chip(0);
+    assert_eq!(result, Err(Error::GameOver));
+    Ok(())
+}
+
+#[test]
 #[ignore]
 fn sample_game() -> Result<(), Error> {
     let mut game = GameState::new(Team::Team1);
