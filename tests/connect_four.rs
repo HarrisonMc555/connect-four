@@ -63,10 +63,10 @@ fn drop_in_full_column() {
     }
     // Column should be filled, now should overflow
     let result = game.drop_chip(0);
-    assert_eq!(result, Err(Error::GridFull));
+    assert_eq!(result, Err(Error::ColumnFull));
     // If we try again, we should get the same error
     let result = game.drop_chip(0);
-    assert_eq!(result, Err(Error::GridFull));
+    assert_eq!(result, Err(Error::ColumnFull));
     // If we try a different column, it should be fine
     let result = game.drop_chip(1);
     assert!(result.is_ok());
@@ -112,7 +112,8 @@ fn sample_game() -> Result<(), Error> {
     println!("final grid:");
     print_grid(&game, "");
     // Quit so we can see
-    Err(Error::GridFull)
+    assert!(false);
+    Ok(())
 }
 
 fn print_grid(game: &GameState, prefix: &str) {

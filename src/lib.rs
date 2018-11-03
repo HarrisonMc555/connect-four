@@ -10,7 +10,7 @@ pub type Grid = [[Cell; NUM_COLS]; NUM_ROWS];
 #[derive (Copy, Clone, Debug, PartialEq)]
 pub enum Error {
     OutOfBounds,
-    GridFull,
+    ColumnFull,
     NotThatTeamsTurn,
     GameOver,
 }
@@ -121,7 +121,7 @@ impl GameState {
                 .enumerate()
                 .find(|(_, row)| row[col] == Cell::Empty)
                 .map(|(index, _)| index)
-                .ok_or(Error::GridFull)
+                .ok_or(Error::ColumnFull)
         }
 
     fn has_won_vertically(&self, _team: Team) -> bool {
