@@ -140,7 +140,13 @@ impl GameState {
                  .any(|slice| slice.iter().all(|&c| c == Cell::Filled(team))))
     }
 
-    fn has_won_diagonally(&self, _team: Team) -> bool {
-        false
+    fn has_won_diagonally(&self, team: Team) -> bool {
+        self.cells
+            .windows(NUM_IN_ROW)
+            .any(|rows| (0..NUM_COLS - NUM_IN_ROW + 1)
+                 .any(|offset| rows.iter()
+                      .enumerate()
+                      .all(|(index, row)|
+                           row[index + offset] == Cell::Filled(team))))
     }
 }

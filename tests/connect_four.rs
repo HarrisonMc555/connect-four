@@ -62,6 +62,28 @@ fn win_vertically() -> Result<(), Error> {
 }
 
 #[test]
+fn win_diagonally() -> Result<(), Error> {
+    let mut game = GameState::new(Team::Team1);
+    // Only valid when NUM_IN_ROW == 4
+    game.drop_chip(0)?; // Team 1 (0, 0)
+    game.drop_chip(1)?; // Team 2 (0, 1)
+    game.drop_chip(1)?; // Team 1 (1, 1)
+    game.drop_chip(2)?; // Team 2 (0, 2)
+    game.drop_chip(2)?; // Team 1 (1, 2)
+    game.drop_chip(NUM_COLS - 1)?; // Team 2 (0, -1)
+    game.drop_chip(2)?; // Team 1 (2, 2)
+    game.drop_chip(3)?; // Team 2 (0, 3)
+    game.drop_chip(3)?; // Team 1 (1, 3)
+    game.drop_chip(3)?; // Team 2 (2, 3)
+    game.drop_chip(3)?; // Team 1 (3, 3)
+    // Team 1 should have won
+    assert!(game.game_over());
+    assert!(game.has_won(Team::Team1));
+    assert_eq!(game.who_won(), Some(Team::Team1));
+    Ok(())
+}
+
+#[test]
 fn drop_out_of_bounds() {
     let mut game = GameState::new(Team::Team1);
     let result = game.drop_chip(NUM_COLS);
