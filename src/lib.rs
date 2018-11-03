@@ -1,8 +1,9 @@
-pub const NUM_ROWS: usize = 6;
-pub const NUM_COLS: usize = 7;
-pub const NUM_IN_ROW: usize = 4;
+pub const DEFAULT_NUM_ROWS: usize = 6;
+pub const DEFAULT_NUM_COLS: usize = 7;
+pub const DEFAULT_NUM_IN_ROW: usize = 4;
+pub const DEFAULT_FIRST_TURN: Team = Team::Team1;
 
-pub type Grid = [[Cell; NUM_COLS]; NUM_ROWS];
+pub type Grid = [[Cell; DEFAULT_NUM_COLS]; DEFAULT_NUM_ROWS];
 
 #[derive (Copy, Clone, Debug, PartialEq)]
 pub enum Error {
@@ -23,15 +24,26 @@ pub enum Team {
 pub struct GameState {
     cells: Grid,
     cur_turn: Team,
+    num_rows: usize,
+    num_cols: usize,
+    num_in_row: usize,
 }
 
 impl GameState {
-    pub fn new(first_turn: Team) -> GameState {
+    pub fn default() -> GameState {
         GameState {
-            cells: [[None; NUM_COLS]; NUM_ROWS],
-            cur_turn: first_turn,
+            cells: [[None; DEFAULT_NUM_COLS]; DEFAULT_NUM_ROWS],
+            cur_turn: DEFAULT_FIRST_TURN,
+            num_rows: DEFAULT_NUM_ROWS,
+            num_cols: DEFAULT_NUM_COLS,
+            num_in_row: DEFAULT_NUM_IN_ROW,
         }
     }
+
+    // pub fn custom(first_turn: Team, num_rows: usize, num_cols: usize,
+    //               num_in_row: usize) -> GameState {
+
+    // }
 
     pub fn grid(&self) -> Grid {
         self.cells
@@ -98,7 +110,7 @@ impl GameState {
 
     fn drop_chip_cells(&mut self, col: usize) ->
         Result<(), Error> {
-            if col >= NUM_COLS {
+            if col >= DEFAULT_NUM_COLS {
                 return Err(Error::OutOfBounds);
             }
             let row = self.highest_unfilled_row(col)?;
@@ -118,8 +130,8 @@ impl GameState {
 
     fn has_won_vertically(&self, team: Team) -> bool {
         self.cells
-            .windows(NUM_IN_ROW)
-            .any(|rows| (0..NUM_COLS)
+            .windows(DEFAULT_NUM_IN_ROW)
+            .any(|rows| (0..DEFAULT_NUM_COLS)
                  .any(|index| rows.iter()
                       .all(|row| row[index] == Some(team))))
     }
@@ -128,15 +140,15 @@ impl GameState {
         self.cells
             .iter()
             .any(|row|
-                 row.windows(NUM_IN_ROW)
+                 row.windows(DEFAULT_NUM_IN_ROW)
                  .any(|slice| slice.iter()
                       .all(|&c| c == Some(team))))
     }
 
     fn has_won_diagonally(&self, team: Team) -> bool {
         self.cells
-            .windows(NUM_IN_ROW)
-            .any(|rows| (0..NUM_COLS - NUM_IN_ROW + 1)
+            .windows(DEFAULT_NUM_IN_ROW)
+            .any(|rows| (0..DEFAULT_NUM_COLS - DEFAULT_NUM_IN_ROW + 1)
                  .any(|offset| rows.iter()
                       .enumerate()
                       .all(|(index, row)|
