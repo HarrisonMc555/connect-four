@@ -40,7 +40,7 @@ fn display_end(game: &GameState) {
     clear_screen();
     display_board(&game);
     println!();
-    println!("{} wins!", game.cur_turn());
+    println!("{} wins!", game.who_won().unwrap());
 }
 
 fn display_board(game: &GameState) {
