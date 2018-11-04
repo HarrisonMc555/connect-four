@@ -142,12 +142,9 @@ impl GameState {
                 rows.iter()
                     .enumerate()
                     .all(|(index, row)| row[offset + index] == Some(team))
-                    ||
-                    rows.iter()
-                    .enumerate()
-                    .all(|(index, row)|
-                         row[offset + self.num_in_row - index - 1]
-                         == Some(team))
+                    || rows.iter().enumerate().all(|(index, row)| {
+                        row[offset + self.num_in_row - index - 1] == Some(team)
+                    })
             })
         })
     }
