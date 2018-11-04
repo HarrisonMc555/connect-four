@@ -1,7 +1,11 @@
+pub const DEFAULT_FIRST_TURN: Team = Team::Team1;
+pub const DEFAULT_NUM_IN_ROW: usize = 4;
 pub const DEFAULT_NUM_ROWS: usize = 6;
 pub const DEFAULT_NUM_COLS: usize = 7;
-pub const DEFAULT_NUM_IN_ROW: usize = 4;
-pub const DEFAULT_FIRST_TURN: Team = Team::Team1;
+
+const DEFAULT_TEAM1_CHAR: char = 'O';
+const DEFAULT_TEAM2_CHAR: char = 'X';
+const DEFAULT_EMPTY_CHAR: char = '_';
 
 pub type Grid = Vec<Vec<Cell>>;
 
@@ -24,8 +28,9 @@ pub enum Team {
 pub struct GameState {
     cells: Grid,
     cur_turn: Team,
-    num_cols: usize,
     num_in_row: usize,
+    // num_rows is determined by the length of `cells`.
+    num_cols: usize,
 }
 
 impl GameState {
@@ -143,9 +148,9 @@ impl GameState {
 
     fn cell_to_char(cell: Cell) -> char {
         match cell {
-            Some(Team::Team1) => 'O',
-            Some(Team::Team2) => 'X',
-            None => '_',
+            Some(Team::Team1) => DEFAULT_TEAM1_CHAR,
+            Some(Team::Team2) => DEFAULT_TEAM2_CHAR,
+            None => DEFAULT_EMPTY_CHAR,
         }
     }
 
