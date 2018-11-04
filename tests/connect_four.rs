@@ -19,8 +19,8 @@ fn drop_chip() -> Result<(), Error> {
 fn drop_multiple_chips() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_COLS {
-        let col1 = (i*2) % DEFAULT_NUM_COLS;
-        let col2 = (i*2 + 1) % DEFAULT_NUM_COLS;
+        let col1 = (i * 2) % DEFAULT_NUM_COLS;
+        let col2 = (i * 2 + 1) % DEFAULT_NUM_COLS;
         game.drop_chip(Team::Team1, col1)?;
         game.drop_chip(Team::Team2, col2)?;
     }
@@ -78,6 +78,7 @@ fn win_diagonally() -> Result<(), Error> {
     game.drop_chip(Team::Team1, 3)?; // Team 1 (1, 3)
     game.drop_chip(Team::Team2, 3)?; // Team 2 (2, 3)
     game.drop_chip(Team::Team1, 3)?; // Team 1 (3, 3)
+
     // Team 1 should have won
     assert!(game.game_over());
     assert!(game.has_won(Team::Team1));
@@ -92,7 +93,7 @@ fn drop_out_of_bounds() {
     assert_eq!(result, Err(Error::OutOfBounds));
     let result = game.drop_chip(Team::Team1, DEFAULT_NUM_COLS + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
-    let result = game.drop_chip(Team::Team1, DEFAULT_NUM_COLS*2 + 1);
+    let result = game.drop_chip(Team::Team1, DEFAULT_NUM_COLS * 2 + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
 }
 
@@ -189,5 +190,6 @@ fn grid_string(game: &GameState, prefix: &str) -> String {
         .into_iter()
         .rev()
         .map(|s| prefix.to_owned() + &s)
-        .collect::<Vec<_>>().join("\n")
+        .collect::<Vec<_>>()
+        .join("\n")
 }

@@ -5,7 +5,7 @@ pub const DEFAULT_FIRST_TURN: Team = Team::Team1;
 
 pub type Grid = Vec<Vec<Cell>>;
 
-#[derive (Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Error {
     OutOfBounds,
     ColumnFull,
@@ -15,7 +15,7 @@ pub enum Error {
 
 type Cell = Option<Team>;
 
-#[derive (Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Team {
     Team1,
     Team2,
@@ -31,15 +31,22 @@ pub struct GameState {
 impl GameState {
     pub fn default() -> GameState {
         GameState {
-            cells: GameState::create_empty_grid(DEFAULT_NUM_ROWS, DEFAULT_NUM_COLS),
+            cells: GameState::create_empty_grid(
+                DEFAULT_NUM_ROWS,
+                DEFAULT_NUM_COLS,
+            ),
             cur_turn: DEFAULT_FIRST_TURN,
             num_cols: DEFAULT_NUM_COLS,
             num_in_row: DEFAULT_NUM_IN_ROW,
         }
     }
 
-    pub fn new(first_turn: Team, num_rows: usize, num_cols: usize,
-               num_in_row: usize) -> GameState {
+    pub fn new(
+        first_turn: Team,
+        num_rows: usize,
+        num_cols: usize,
+        num_in_row: usize,
+    ) -> GameState {
         GameState {
             cells: GameState::create_empty_grid(num_rows, num_cols),
             cur_turn: first_turn,
@@ -103,37 +110,35 @@ impl GameState {
     pub fn to_string_arr(&self) -> Vec<String> {
         self.cells
             .iter()
-            .map(|row| row.iter()
-                 .map(|&cell| GameState::cell_to_char(cell))
-                 .collect())
-            .collect()
+            .map(|row| {
+                row.iter()
+                    .map(|&cell| GameState::cell_to_char(cell))
+                    .collect()
+            }).collect()
     }
 
     fn has_won_vertically(&self, team: Team) -> bool {
-        self.cells
-            .windows(self.num_in_row)
-            .any(|rows| (0..self.num_cols)
-                 .any(|index| rows.iter()
-                      .all(|row| row[index] == Some(team))))
+        self.cells.windows(self.num_in_row).any(|rows| {
+            (0..self.num_cols)
+                .any(|index| rows.iter().all(|row| row[index] == Some(team)))
+        })
     }
 
     fn has_won_horizontally(&self, team: Team) -> bool {
-        self.cells
-            .iter()
-            .any(|row|
-                 row.windows(self.num_in_row)
-                 .any(|slice| slice.iter()
-                      .all(|&c| c == Some(team))))
+        self.cells.iter().any(|row| {
+            row.windows(self.num_in_row)
+                .any(|slice| slice.iter().all(|&c| c == Some(team)))
+        })
     }
 
     fn has_won_diagonally(&self, team: Team) -> bool {
-        self.cells
-            .windows(self.num_in_row)
-            .any(|rows| (0..self.num_cols - self.num_in_row + 1)
-                 .any(|offset| rows.iter()
-                      .enumerate()
-                      .all(|(index, row)|
-                           row[index + offset] == Some(team))))
+        self.cells.windows(self.num_in_row).any(|rows| {
+            (0..self.num_cols - self.num_in_row + 1).any(|offset| {
+                rows.iter()
+                    .enumerate()
+                    .all(|(index, row)| row[index + offset] == Some(team))
+            })
+        })
     }
 
     fn cell_to_char(cell: Cell) -> char {
@@ -151,27 +156,27 @@ impl GameState {
         }
     }
 
-    fn drop_chip_cells(&mut self, col: usize) ->
-        Result<(), Error> {
-            if col >= self.num_cols {
-                return Err(Error::OutOfBounds);
-            }
-            let row = self.highest_unfilled_row(col)?;
-            self.cells[row][col] = Some(self.cur_turn);
-            Ok(())
+    fn drop_chip_cells(&mut self, col: usize) -> Result<(), Error> {
+        if col >= self.num_cols {
+            return Err(Error::OutOfBounds);
         }
+        let row = self.highest_unfilled_row(col)?;
+        self.cells[row][col] = Some(self.cur_turn);
+        Ok(())
+    }
 
-    fn highest_unfilled_row(&self, col: usize) ->
-        Result<usize, Error> {
-            self.cells
-                .iter()
-                .enumerate()
-                .find(|(_, row)| row[col] == None)
-                .map(|(index, _)| index)
-                .ok_or(Error::ColumnFull)
-        }
+    fn highest_unfilled_row(&self, col: usize) -> Result<usize, Error> {
+        self.cells
+            .iter()
+            .enumerate()
+            .find(|(_, row)| row[col] == None)
+            .map(|(index, _)| index)
+            .ok_or(Error::ColumnFull)
+    }
 
     fn create_empty_grid(num_rows: usize, num_cols: usize) -> Grid {
-        (0..num_rows).map(|_| (0..num_cols).map(|_| None).collect()).collect()
+        (0..num_rows)
+            .map(|_| (0..num_cols).map(|_| None).collect())
+            .collect()
     }
 }
