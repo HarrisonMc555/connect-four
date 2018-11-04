@@ -68,9 +68,12 @@ impl GameState {
         self.cur_turn
     }
 
-    pub fn drop_chip(&mut self, col: usize) -> Result<(), Error> {
+    pub fn drop_chip(&mut self, team: Team, col: usize) -> Result<(), Error> {
         if self.game_over() {
             return Err(Error::GameOver);
+        }
+        if self.cur_turn != team {
+            return Err(Error::NotThatTeamsTurn);
         }
         self.drop_chip_cells(col)?;
         self.cur_turn = GameState::next_turn(self.cur_turn);
@@ -104,14 +107,6 @@ impl GameState {
                  .map(|&cell| GameState::cell_to_char(cell))
                  .collect())
             .collect()
-        // self.cells
-        //     .iter()
-        //     .map(|row| row.iter()
-        //          .map(|&cell| GameState::cell_to_char(cell).to_string())
-        //          .collect::<Vec<_>>()
-        //          .join(" ")
-        //     )
-        //     .collect()
     }
 
     fn has_won_vertically(&self, team: Team) -> bool {

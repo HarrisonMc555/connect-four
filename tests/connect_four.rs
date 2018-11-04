@@ -11,16 +11,18 @@ fn create_game_state() -> Result<(), ()> {
 #[test]
 fn drop_chip() -> Result<(), Error> {
     let mut game = GameState::default();
-    game.drop_chip(0)?;
+    game.drop_chip(DEFAULT_FIRST_TURN, 0)?;
     Ok(())
 }
 
 #[test]
 fn drop_multiple_chips() -> Result<(), Error> {
     let mut game = GameState::default();
-    for i in 0..2*DEFAULT_NUM_COLS {
-        let col = i % DEFAULT_NUM_COLS;
-        game.drop_chip(col)?;
+    for i in 0..DEFAULT_NUM_COLS {
+        let col1 = (i*2) % DEFAULT_NUM_COLS;
+        let col2 = (i*2 + 1) % DEFAULT_NUM_COLS;
+        game.drop_chip(Team::Team1, col1)?;
+        game.drop_chip(Team::Team2, col2)?;
     }
     Ok(())
 }
@@ -30,10 +32,10 @@ fn win_horizontally() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
         // Team 1
-        game.drop_chip(i)?;
+        game.drop_chip(Team::Team1, i)?;
         // Team 2
         if i < DEFAULT_NUM_IN_ROW - 1 {
-            game.drop_chip(i)?;
+            game.drop_chip(Team::Team2, i)?;
         }
     }
     // Team 1 should have won
@@ -48,10 +50,10 @@ fn win_vertically() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
         // Team 1
-        game.drop_chip(0)?;
+        game.drop_chip(Team::Team1, 0)?;
         // Team 2
         if i < DEFAULT_NUM_IN_ROW - 1 {
-            game.drop_chip(1)?;
+            game.drop_chip(Team::Team2, 1)?;
         }
     }
     // Team 1 should have won
@@ -65,17 +67,17 @@ fn win_vertically() -> Result<(), Error> {
 fn win_diagonally() -> Result<(), Error> {
     let mut game = GameState::default();
     // Only valid when DEFAULT_NUM_IN_ROW == 4
-    game.drop_chip(0)?; // Team 1 (0, 0)
-    game.drop_chip(1)?; // Team 2 (0, 1)
-    game.drop_chip(1)?; // Team 1 (1, 1)
-    game.drop_chip(2)?; // Team 2 (0, 2)
-    game.drop_chip(2)?; // Team 1 (1, 2)
-    game.drop_chip(DEFAULT_NUM_COLS - 1)?; // Team 2 (0, -1)
-    game.drop_chip(2)?; // Team 1 (2, 2)
-    game.drop_chip(3)?; // Team 2 (0, 3)
-    game.drop_chip(3)?; // Team 1 (1, 3)
-    game.drop_chip(3)?; // Team 2 (2, 3)
-    game.drop_chip(3)?; // Team 1 (3, 3)
+    game.drop_chip(Team::Team1, 0)?; // Team 1 (0, 0)
+    game.drop_chip(Team::Team2, 1)?; // Team 2 (0, 1)
+    game.drop_chip(Team::Team1, 1)?; // Team 1 (1, 1)
+    game.drop_chip(Team::Team2, 2)?; // Team 2 (0, 2)
+    game.drop_chip(Team::Team1, 2)?; // Team 1 (1, 2)
+    game.drop_chip(Team::Team2, DEFAULT_NUM_COLS - 1)?; // Team 2 (0, -1)
+    game.drop_chip(Team::Team1, 2)?; // Team 1 (2, 2)
+    game.drop_chip(Team::Team2, 3)?; // Team 2 (0, 3)
+    game.drop_chip(Team::Team1, 3)?; // Team 1 (1, 3)
+    game.drop_chip(Team::Team2, 3)?; // Team 2 (2, 3)
+    game.drop_chip(Team::Team1, 3)?; // Team 1 (3, 3)
     // Team 1 should have won
     assert!(game.game_over());
     assert!(game.has_won(Team::Team1));
@@ -86,11 +88,11 @@ fn win_diagonally() -> Result<(), Error> {
 #[test]
 fn drop_out_of_bounds() {
     let mut game = GameState::default();
-    let result = game.drop_chip(DEFAULT_NUM_COLS);
+    let result = game.drop_chip(Team::Team1, DEFAULT_NUM_COLS);
     assert_eq!(result, Err(Error::OutOfBounds));
-    let result = game.drop_chip(DEFAULT_NUM_COLS + 1);
+    let result = game.drop_chip(Team::Team1, DEFAULT_NUM_COLS + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
-    let result = game.drop_chip(DEFAULT_NUM_COLS*2 + 1);
+    let result = game.drop_chip(Team::Team1, DEFAULT_NUM_COLS*2 + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
 }
 
@@ -98,17 +100,21 @@ fn drop_out_of_bounds() {
 fn drop_in_full_column() {
     let mut game = GameState::default();
     for _ in 0..DEFAULT_NUM_ROWS {
-        let result = game.drop_chip(0);
+        let cur_turn = game.cur_turn();
+        let result = game.drop_chip(cur_turn, 0);
         assert!(result.is_ok());
     }
     // Column should be filled, now should overflow
-    let result = game.drop_chip(0);
+    let cur_turn = game.cur_turn();
+    let result = game.drop_chip(cur_turn, 0);
     assert_eq!(result, Err(Error::ColumnFull));
     // If we try again, we should get the same error
-    let result = game.drop_chip(0);
+    let cur_turn = game.cur_turn();
+    let result = game.drop_chip(cur_turn, 0);
     assert_eq!(result, Err(Error::ColumnFull));
     // If we try a different column, it should be fine
-    let result = game.drop_chip(1);
+    let cur_turn = game.cur_turn();
+    let result = game.drop_chip(cur_turn, 1);
     assert!(result.is_ok());
 }
 
@@ -117,13 +123,13 @@ fn no_drops_after_game_over() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
         // Team 1
-        game.drop_chip(i)?;
+        game.drop_chip(Team::Team1, i)?;
         if i < DEFAULT_NUM_IN_ROW - 1 {
             // Team 2
-            game.drop_chip(i)?;
+            game.drop_chip(Team::Team2, i)?;
         }
     }
-    let result = game.drop_chip(0);
+    let result = game.drop_chip(Team::Team2, 0);
     assert_eq!(result, Err(Error::GameOver));
     Ok(())
 }
@@ -133,11 +139,11 @@ fn custom_size() -> Result<(), Error> {
     let mut game = GameState::new(Team::Team2, 10, 9, 6);
     let num_cols = game.num_cols();
     let num_in_row = game.num_in_row();
-    game.drop_chip(num_cols - 1)?;
+    game.drop_chip(Team::Team2, num_cols - 1)?;
     for i in 0..num_in_row {
-        game.drop_chip(i)?;
+        game.drop_chip(Team::Team1, i)?;
         if i < num_in_row - 1 {
-            game.drop_chip(i)?;
+            game.drop_chip(Team::Team2, i)?;
         }
     }
     assert!(game.game_over());
@@ -145,7 +151,7 @@ fn custom_size() -> Result<(), Error> {
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 fn sample_game() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
@@ -153,13 +159,15 @@ fn sample_game() -> Result<(), Error> {
         println!("\tbefore team 1 drop:");
         print_grid(&game, "\t\t");
         // Team 1
-        game.drop_chip(i)?;
+        let cur_turn = game.cur_turn();
+        game.drop_chip(cur_turn, i)?;
         println!("\tafter team 1 drop:");
         print_grid(&game, "\t\t");
         // Team 2
         if i < DEFAULT_NUM_IN_ROW - 1 {
             println!("\tabout to drop team 2:");
-            game.drop_chip(i)?;
+            let cur_turn = game.cur_turn();
+            game.drop_chip(cur_turn, i)?;
             println!("\tafter team 2 drop:");
             print_grid(&game, "\t\t");
         }
