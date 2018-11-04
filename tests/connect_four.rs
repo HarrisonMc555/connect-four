@@ -129,7 +129,23 @@ fn no_drops_after_game_over() -> Result<(), Error> {
 }
 
 #[test]
-#[ignore]
+fn custom_size() -> Result<(), Error> {
+    let mut game = GameState::new(Team::Team2, 10, 9, 6);
+    let num_cols = game.num_cols();
+    let num_in_row = game.num_in_row();
+    game.drop_chip(num_cols - 1)?;
+    for i in 0..num_in_row {
+        game.drop_chip(i)?;
+        if i < num_in_row - 1 {
+            game.drop_chip(i)?;
+        }
+    }
+    assert!(game.game_over());
+    Ok(())
+}
+
+#[test]
+// #[ignore]
 fn sample_game() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
@@ -161,6 +177,9 @@ fn print_grid(game: &GameState, prefix: &str) {
 }
 
 fn grid_string(game: &GameState, prefix: &str) -> String {
-    game.to_string_arr().into_iter().rev().map(|s| prefix.to_owned() + &s)
+    game.to_string_arr()
+        .into_iter()
+        .rev()
+        .map(|s| prefix.to_owned() + &s)
         .collect::<Vec<_>>().join("\n")
 }

@@ -24,7 +24,6 @@ pub enum Team {
 pub struct GameState {
     cells: Grid,
     cur_turn: Team,
-    num_rows: usize,
     num_cols: usize,
     num_in_row: usize,
 }
@@ -34,25 +33,31 @@ impl GameState {
         GameState {
             cells: GameState::create_empty_grid(DEFAULT_NUM_ROWS, DEFAULT_NUM_COLS),
             cur_turn: DEFAULT_FIRST_TURN,
-            num_rows: DEFAULT_NUM_ROWS,
             num_cols: DEFAULT_NUM_COLS,
             num_in_row: DEFAULT_NUM_IN_ROW,
         }
     }
 
-    pub fn custom(first_turn: Team, num_rows: usize, num_cols: usize,
-                  num_in_row: usize) -> GameState {
+    pub fn new(first_turn: Team, num_rows: usize, num_cols: usize,
+               num_in_row: usize) -> GameState {
         GameState {
-            cells: GameState::create_empty_grid(DEFAULT_NUM_ROWS, DEFAULT_NUM_COLS),
+            cells: GameState::create_empty_grid(num_rows, num_cols),
             cur_turn: first_turn,
-            num_rows,
             num_cols,
             num_in_row,
         }
     }
 
-    fn create_empty_grid(num_rows: usize, num_cols: usize) -> Grid {
-        (0..num_rows).map(|_| (0..num_cols).map(|_| None).collect()).collect()
+    pub fn num_rows(&self) -> usize {
+        self.cells.len()
+    }
+
+    pub fn num_cols(&self) -> usize {
+        self.num_cols
+    }
+
+    pub fn num_in_row(&self) -> usize {
+        self.num_in_row
     }
 
     pub fn grid(&self) -> &Grid {
@@ -96,11 +101,44 @@ impl GameState {
         self.cells
             .iter()
             .map(|row| row.iter()
-                 .map(|&cell| GameState::cell_to_char(cell).to_string())
-                 .collect::<Vec<_>>()
-                 .join(" ")
-            )
+                 .map(|&cell| GameState::cell_to_char(cell))
+                 .collect())
             .collect()
+        // self.cells
+        //     .iter()
+        //     .map(|row| row.iter()
+        //          .map(|&cell| GameState::cell_to_char(cell).to_string())
+        //          .collect::<Vec<_>>()
+        //          .join(" ")
+        //     )
+        //     .collect()
+    }
+
+    fn has_won_vertically(&self, team: Team) -> bool {
+        self.cells
+            .windows(self.num_in_row)
+            .any(|rows| (0..self.num_cols)
+                 .any(|index| rows.iter()
+                      .all(|row| row[index] == Some(team))))
+    }
+
+    fn has_won_horizontally(&self, team: Team) -> bool {
+        self.cells
+            .iter()
+            .any(|row|
+                 row.windows(self.num_in_row)
+                 .any(|slice| slice.iter()
+                      .all(|&c| c == Some(team))))
+    }
+
+    fn has_won_diagonally(&self, team: Team) -> bool {
+        self.cells
+            .windows(self.num_in_row)
+            .any(|rows| (0..self.num_cols - self.num_in_row + 1)
+                 .any(|offset| rows.iter()
+                      .enumerate()
+                      .all(|(index, row)|
+                           row[index + offset] == Some(team))))
     }
 
     fn cell_to_char(cell: Cell) -> char {
@@ -120,7 +158,7 @@ impl GameState {
 
     fn drop_chip_cells(&mut self, col: usize) ->
         Result<(), Error> {
-            if col >= DEFAULT_NUM_COLS {
+            if col >= self.num_cols {
                 return Err(Error::OutOfBounds);
             }
             let row = self.highest_unfilled_row(col)?;
@@ -138,30 +176,7 @@ impl GameState {
                 .ok_or(Error::ColumnFull)
         }
 
-    fn has_won_vertically(&self, team: Team) -> bool {
-        self.cells
-            .windows(DEFAULT_NUM_IN_ROW)
-            .any(|rows| (0..DEFAULT_NUM_COLS)
-                 .any(|index| rows.iter()
-                      .all(|row| row[index] == Some(team))))
-    }
-
-    fn has_won_horizontally(&self, team: Team) -> bool {
-        self.cells
-            .iter()
-            .any(|row|
-                 row.windows(DEFAULT_NUM_IN_ROW)
-                 .any(|slice| slice.iter()
-                      .all(|&c| c == Some(team))))
-    }
-
-    fn has_won_diagonally(&self, team: Team) -> bool {
-        self.cells
-            .windows(DEFAULT_NUM_IN_ROW)
-            .any(|rows| (0..DEFAULT_NUM_COLS - DEFAULT_NUM_IN_ROW + 1)
-                 .any(|offset| rows.iter()
-                      .enumerate()
-                      .all(|(index, row)|
-                           row[index + offset] == Some(team))))
+    fn create_empty_grid(num_rows: usize, num_cols: usize) -> Grid {
+        (0..num_rows).map(|_| (0..num_cols).map(|_| None).collect()).collect()
     }
 }
