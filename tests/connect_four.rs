@@ -64,7 +64,7 @@ fn win_vertically() -> Result<(), Error> {
 }
 
 #[test]
-fn win_diagonally() -> Result<(), Error> {
+fn win_diagonally_up_right() -> Result<(), Error> {
     let mut game = GameState::default();
     // Only valid when DEFAULT_NUM_IN_ROW == 4
     game.drop_chip(Team::Team1, 0)?; // Team 1 (0, 0)
@@ -80,6 +80,30 @@ fn win_diagonally() -> Result<(), Error> {
     game.drop_chip(Team::Team1, 3)?; // Team 1 (3, 3)
 
     // Team 1 should have won
+    assert!(game.game_over());
+    assert!(game.has_won(Team::Team1));
+    assert_eq!(game.who_won(), Some(Team::Team1));
+    Ok(())
+}
+
+#[test]
+fn win_diagonally_up_left() -> Result<(), Error> {
+    let mut game = GameState::default();
+    // Only valid when DEFAULT_NUM_IN_ROW == 4
+    game.drop_chip(Team::Team1, 3)?; // Team 1 (0, 3)
+    game.drop_chip(Team::Team2, 2)?; // Team 2 (0, 2)
+    game.drop_chip(Team::Team1, 2)?; // Team 1 (1, 2)
+    game.drop_chip(Team::Team2, 1)?; // Team 2 (0, 1)
+    game.drop_chip(Team::Team1, 1)?; // Team 1 (1, 1)
+    game.drop_chip(Team::Team2, DEFAULT_NUM_COLS - 1)?; // Team 2 (0, -1)
+    game.drop_chip(Team::Team1, 1)?; // Team 1 (2, 1)
+    game.drop_chip(Team::Team2, 0)?; // Team 2 (0, 0)
+    game.drop_chip(Team::Team1, 0)?; // Team 1 (1, 0)
+    game.drop_chip(Team::Team2, 0)?; // Team 2 (2, 0)
+    game.drop_chip(Team::Team1, 0)?; // Team 1 (3, 0)
+
+    // Team 1 should have won
+    print_grid(&game, "");
     assert!(game.game_over());
     assert!(game.has_won(Team::Team1));
     assert_eq!(game.who_won(), Some(Team::Team1));

@@ -141,7 +141,13 @@ impl GameState {
             (0..self.num_cols - self.num_in_row + 1).any(|offset| {
                 rows.iter()
                     .enumerate()
-                    .all(|(index, row)| row[index + offset] == Some(team))
+                    .all(|(index, row)| row[offset + index] == Some(team))
+                    ||
+                    rows.iter()
+                    .enumerate()
+                    .all(|(index, row)|
+                         row[offset + self.num_in_row - index - 1]
+                         == Some(team))
             })
         })
     }
