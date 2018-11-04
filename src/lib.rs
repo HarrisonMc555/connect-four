@@ -3,7 +3,7 @@ pub const DEFAULT_NUM_COLS: usize = 7;
 pub const DEFAULT_NUM_IN_ROW: usize = 4;
 pub const DEFAULT_FIRST_TURN: Team = Team::Team1;
 
-pub type Grid = [[Cell; DEFAULT_NUM_COLS]; DEFAULT_NUM_ROWS];
+pub type Grid = Vec<Vec<Cell>>;
 
 #[derive (Copy, Clone, Debug, PartialEq)]
 pub enum Error {
@@ -32,7 +32,7 @@ pub struct GameState {
 impl GameState {
     pub fn default() -> GameState {
         GameState {
-            cells: [[None; DEFAULT_NUM_COLS]; DEFAULT_NUM_ROWS],
+            cells: GameState::create_empty_grid(DEFAULT_NUM_ROWS, DEFAULT_NUM_COLS),
             cur_turn: DEFAULT_FIRST_TURN,
             num_rows: DEFAULT_NUM_ROWS,
             num_cols: DEFAULT_NUM_COLS,
@@ -40,13 +40,23 @@ impl GameState {
         }
     }
 
-    // pub fn custom(first_turn: Team, num_rows: usize, num_cols: usize,
-    //               num_in_row: usize) -> GameState {
+    pub fn custom(first_turn: Team, num_rows: usize, num_cols: usize,
+                  num_in_row: usize) -> GameState {
+        GameState {
+            cells: GameState::create_empty_grid(DEFAULT_NUM_ROWS, DEFAULT_NUM_COLS),
+            cur_turn: first_turn,
+            num_rows,
+            num_cols,
+            num_in_row,
+        }
+    }
 
-    // }
+    fn create_empty_grid(num_rows: usize, num_cols: usize) -> Grid {
+        (0..num_rows).map(|_| (0..num_cols).map(|_| None).collect()).collect()
+    }
 
-    pub fn grid(&self) -> Grid {
-        self.cells
+    pub fn grid(&self) -> &Grid {
+        &self.cells
     }
 
     pub fn cur_turn(&self) -> Team {
