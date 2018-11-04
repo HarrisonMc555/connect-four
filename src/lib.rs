@@ -20,7 +20,13 @@ pub enum Error {
 type Cell = Option<Team>;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub struct Team(pub usize);
+pub struct Team(usize);
+
+impl Team {
+    pub fn new(team: usize) -> Team {
+        Team(team)
+    }
+}
 
 pub struct GameState {
     cells: Grid,

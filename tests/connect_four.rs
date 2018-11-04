@@ -21,8 +21,8 @@ fn drop_multiple_chips() -> Result<(), Error> {
     for i in 0..DEFAULT_NUM_COLS {
         let col1 = (i * 2) % DEFAULT_NUM_COLS;
         let col2 = (i * 2 + 1) % DEFAULT_NUM_COLS;
-        game.drop_chip(Team(0), col1)?;
-        game.drop_chip(Team(1), col2)?;
+        game.drop_chip(Team::new(0), col1)?;
+        game.drop_chip(Team::new(1), col2)?;
     }
     Ok(())
 }
@@ -32,16 +32,16 @@ fn win_horizontally() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
         // Team 0
-        game.drop_chip(Team(0), i)?;
+        game.drop_chip(Team::new(0), i)?;
         // Team 1
         if i < DEFAULT_NUM_IN_ROW - 1 {
-            game.drop_chip(Team(1), i)?;
+            game.drop_chip(Team::new(1), i)?;
         }
     }
     // Team 0 should have won
     assert!(game.game_over());
-    assert!(game.has_won(Team(0)));
-    assert_eq!(game.who_won(), Some(Team(0)));
+    assert!(game.has_won(Team::new(0)));
+    assert_eq!(game.who_won(), Some(Team::new(0)));
     Ok(())
 }
 
@@ -50,16 +50,16 @@ fn win_vertically() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
         // Team 0
-        game.drop_chip(Team(0), 0)?;
+        game.drop_chip(Team::new(0), 0)?;
         // Team 1
         if i < DEFAULT_NUM_IN_ROW - 1 {
-            game.drop_chip(Team(1), 1)?;
+            game.drop_chip(Team::new(1), 1)?;
         }
     }
     // Team 0 should have won
     assert!(game.game_over());
-    assert!(game.has_won(Team(0)));
-    assert_eq!(game.who_won(), Some(Team(0)));
+    assert!(game.has_won(Team::new(0)));
+    assert_eq!(game.who_won(), Some(Team::new(0)));
     Ok(())
 }
 
@@ -67,22 +67,22 @@ fn win_vertically() -> Result<(), Error> {
 fn win_diagonally_up_right() -> Result<(), Error> {
     let mut game = GameState::default();
     // Only valid when DEFAULT_NUM_IN_ROW == 4
-    game.drop_chip(Team(0), 0)?; // Team 0 (0, 0)
-    game.drop_chip(Team(1), 1)?; // Team 1 (0, 1)
-    game.drop_chip(Team(0), 1)?; // Team 0 (1, 1)
-    game.drop_chip(Team(1), 2)?; // Team 1 (0, 2)
-    game.drop_chip(Team(0), 2)?; // Team 0 (1, 2)
-    game.drop_chip(Team(1), DEFAULT_NUM_COLS - 1)?; // Team 1 (0, -1)
-    game.drop_chip(Team(0), 2)?; // Team 0 (2, 2)
-    game.drop_chip(Team(1), 3)?; // Team 1 (0, 3)
-    game.drop_chip(Team(0), 3)?; // Team 0 (1, 3)
-    game.drop_chip(Team(1), 3)?; // Team 1 (2, 3)
-    game.drop_chip(Team(0), 3)?; // Team 0 (3, 3)
+    game.drop_chip(Team::new(0), 0)?; // Team 0 (0, 0)
+    game.drop_chip(Team::new(1), 1)?; // Team 1 (0, 1)
+    game.drop_chip(Team::new(0), 1)?; // Team 0 (1, 1)
+    game.drop_chip(Team::new(1), 2)?; // Team 1 (0, 2)
+    game.drop_chip(Team::new(0), 2)?; // Team 0 (1, 2)
+    game.drop_chip(Team::new(1), DEFAULT_NUM_COLS - 1)?; // Team 1 (0, -1)
+    game.drop_chip(Team::new(0), 2)?; // Team 0 (2, 2)
+    game.drop_chip(Team::new(1), 3)?; // Team 1 (0, 3)
+    game.drop_chip(Team::new(0), 3)?; // Team 0 (1, 3)
+    game.drop_chip(Team::new(1), 3)?; // Team 1 (2, 3)
+    game.drop_chip(Team::new(0), 3)?; // Team 0 (3, 3)
 
     // Team 0 should have won
     assert!(game.game_over());
-    assert!(game.has_won(Team(0)));
-    assert_eq!(game.who_won(), Some(Team(0)));
+    assert!(game.has_won(Team::new(0)));
+    assert_eq!(game.who_won(), Some(Team::new(0)));
     Ok(())
 }
 
@@ -90,34 +90,34 @@ fn win_diagonally_up_right() -> Result<(), Error> {
 fn win_diagonally_up_left() -> Result<(), Error> {
     let mut game = GameState::default();
     // Only valid when DEFAULT_NUM_IN_ROW == 4
-    game.drop_chip(Team(0), 3)?; // Team 0 (0, 3)
-    game.drop_chip(Team(1), 2)?; // Team 1 (0, 2)
-    game.drop_chip(Team(0), 2)?; // Team 0 (1, 2)
-    game.drop_chip(Team(1), 1)?; // Team 1 (0, 1)
-    game.drop_chip(Team(0), 1)?; // Team 0 (1, 1)
-    game.drop_chip(Team(1), DEFAULT_NUM_COLS - 1)?; // Team 1 (0, -1)
-    game.drop_chip(Team(0), 1)?; // Team 0 (2, 1)
-    game.drop_chip(Team(1), 0)?; // Team 1 (0, 0)
-    game.drop_chip(Team(0), 0)?; // Team 0 (1, 0)
-    game.drop_chip(Team(1), 0)?; // Team 1 (2, 0)
-    game.drop_chip(Team(0), 0)?; // Team 0 (3, 0)
+    game.drop_chip(Team::new(0), 3)?; // Team 0 (0, 3)
+    game.drop_chip(Team::new(1), 2)?; // Team 1 (0, 2)
+    game.drop_chip(Team::new(0), 2)?; // Team 0 (1, 2)
+    game.drop_chip(Team::new(1), 1)?; // Team 1 (0, 1)
+    game.drop_chip(Team::new(0), 1)?; // Team 0 (1, 1)
+    game.drop_chip(Team::new(1), DEFAULT_NUM_COLS - 1)?; // Team 1 (0, -1)
+    game.drop_chip(Team::new(0), 1)?; // Team 0 (2, 1)
+    game.drop_chip(Team::new(1), 0)?; // Team 1 (0, 0)
+    game.drop_chip(Team::new(0), 0)?; // Team 0 (1, 0)
+    game.drop_chip(Team::new(1), 0)?; // Team 1 (2, 0)
+    game.drop_chip(Team::new(0), 0)?; // Team 0 (3, 0)
 
     // Team 0 should have won
     // print_grid(&game, "");
     assert!(game.game_over());
-    assert!(game.has_won(Team(0)));
-    assert_eq!(game.who_won(), Some(Team(0)));
+    assert!(game.has_won(Team::new(0)));
+    assert_eq!(game.who_won(), Some(Team::new(0)));
     Ok(())
 }
 
 #[test]
 fn drop_out_of_bounds() {
     let mut game = GameState::default();
-    let result = game.drop_chip(Team(0), DEFAULT_NUM_COLS);
+    let result = game.drop_chip(Team::new(0), DEFAULT_NUM_COLS);
     assert_eq!(result, Err(Error::OutOfBounds));
-    let result = game.drop_chip(Team(0), DEFAULT_NUM_COLS + 1);
+    let result = game.drop_chip(Team::new(0), DEFAULT_NUM_COLS + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
-    let result = game.drop_chip(Team(0), DEFAULT_NUM_COLS * 2 + 1);
+    let result = game.drop_chip(Team::new(0), DEFAULT_NUM_COLS * 2 + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
 }
 
@@ -148,26 +148,26 @@ fn no_drops_after_game_over() -> Result<(), Error> {
     let mut game = GameState::default();
     for i in 0..DEFAULT_NUM_IN_ROW {
         // Team 0
-        game.drop_chip(Team(0), i)?;
+        game.drop_chip(Team::new(0), i)?;
         if i < DEFAULT_NUM_IN_ROW - 1 {
             // Team 1
-            game.drop_chip(Team(1), i)?;
+            game.drop_chip(Team::new(1), i)?;
         }
     }
-    let result = game.drop_chip(Team(1), 0);
+    let result = game.drop_chip(Team::new(1), 0);
     assert_eq!(result, Err(Error::GameOver));
     Ok(())
 }
 
 #[test]
 fn custom_game() -> Result<(), Error> {
-    let mut game = GameState::new(Team(2), 3, 10, 9, 6)?;
+    let mut game = GameState::new(Team::new(2), 3, 10, 9, 6)?;
     let num_in_row = game.num_in_row();
-    game.drop_chip(Team(2), 0)?;
+    game.drop_chip(Team::new(2), 0)?;
     for i in 0..num_in_row - 1 {
-        game.drop_chip(Team(0), i)?;
-        game.drop_chip(Team(1), i)?;
-        game.drop_chip(Team(2), i + 1)?;
+        game.drop_chip(Team::new(0), i)?;
+        game.drop_chip(Team::new(1), i)?;
+        game.drop_chip(Team::new(2), i + 1)?;
     }
     // print_grid(&game, "");
     assert!(game.game_over());
