@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 array2d = "0.2"
+itertools = "0.8"

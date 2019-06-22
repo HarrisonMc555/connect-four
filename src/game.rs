@@ -1,4 +1,5 @@
 use array2d::Array2D;
+use itertools::iproduct;
 use std::{char, fmt};
 
 pub const DEFAULT_FIRST_TURN: Team = Team(0);
@@ -126,20 +127,50 @@ impl GameState {
                 .windows(self.winning_length)
                 .any(|window| self.team_won_in_sequence(window.iter(), team))
         })
-        // self.cells.windows(self.winning_length).any(|rows| {
-        //     (0..self.num_columns).any(|index| rows.iter().all(|row| row[index] == Some(team)))
-        // })
     }
 
-    fn has_won_horizontally(&self, team: Team) -> bool {
+    fn has_won_horizontally2(&self, team: Team) -> bool {
         self.cells.as_rows().iter().any(|row| {
             row.windows(self.winning_length)
                 .any(|window| self.team_won_in_sequence(window.iter(), team))
         })
-        // self.cells.iter().any(|row| {
-        //     row.windows(self.winning_length)
-        //         .any(|slice| slice.iter().all(|&c| c == Some(team)))
-        // })
+    }
+
+    fn has_won_horizontally(&self, team: Team) -> bool {
+        self.coordinates()
+            .filter_map(|(row, column)| self.horizontal_sequence_coordinates(row, column))
+            .any(|coordinates| self.won_with_coordinates(coordinates, team))
+    }
+
+    fn coordinates(&self) -> impl Iterator<Item = (usize, usize)> {
+        iproduct!(0..self.num_rows(), 0..self.num_columns())
+    }
+
+    fn won_with_coordinates<I>(&self, mut coordinates: I, team: Team) -> bool
+    where
+        I: Iterator<Item = (usize, usize)>,
+    {
+        coordinates.all(|coords| self.cells[coords] == Some(team))
+    }
+
+    fn horizontal_sequence_coordinates(
+        &self,
+        row: usize,
+        column: usize,
+    ) -> Option<impl Iterator<Item = (usize, usize)>> {
+        let last_column = column + self.winning_length;
+        if last_column >= self.num_columns() {
+            None
+        } else {
+            Some((column..last_column).map(move |c| (row, c)))
+        }
+    }
+
+    fn horizontal_starting_coordinates(&self) -> impl Iterator<Item = (usize, usize)> {
+        iproduct!(
+            0..self.num_rows(),
+            0..=(self.num_columns() - self.winning_length)
+        )
     }
 
     fn has_won_diagonally(&self, team: Team) -> bool {
@@ -191,13 +222,6 @@ impl GameState {
             .find(|(_, cell)| cell.is_none())
             .map(|(index, _)| index)
             .ok_or(Error::ColumnFull)
-
-        // self.cells
-        //     .rows_iter()
-        //     .enumerate()
-        //     .find(|(_, row_iter)| row[column] == None)
-        //     .map(|(index, _)| index)
-        //     .ok_or(Error::ColumnFull)
     }
 
     fn create_empty_grid_rows(num_rows: usize, num_columns: usize) -> Vec<Vec<Cell>> {
@@ -205,12 +229,6 @@ impl GameState {
             .map(|_| (0..num_columns).map(|_| None).collect())
             .collect()
     }
-
-    // fn team_won_in_sequence(&self, sequence: &[Cell], team: Team) -> bool {
-    //     sequence
-    //         .windows(self.winning_length)
-    //         .any(|window| window.iter().all(|cell| cell == &Some(team)))
-    // }
 
     fn team_won_in_sequence<'a, I>(&'a self, mut sequence_iter: I, team: Team) -> bool
     where
