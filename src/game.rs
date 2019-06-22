@@ -1,16 +1,14 @@
-use std::char;
-use std::fmt;
+use array2d::Array2D;
+use std::{char, fmt};
 
 pub const DEFAULT_FIRST_TURN: Team = Team(0);
 pub const DEFAULT_NUM_TEAMS: usize = 2;
-pub const DEFAULT_NUM_IN_ROW: usize = 4;
+pub const DEFAULT_WINNING_LENGTH: usize = 4;
 pub const DEFAULT_NUM_ROWS: usize = 6;
-pub const DEFAULT_NUM_COLS: usize = 7;
+pub const DEFAULT_NUM_COLUMNS: usize = 7;
 
 pub const MAX_PRINTABLE_TEAMS: usize = 16;
 const DEFAULT_EMPTY_CHAR: char = '_';
-
-pub type Grid = Vec<Vec<Cell>>;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Error {
@@ -33,72 +31,64 @@ impl Team {
 }
 
 pub struct GameState {
-    cells: Grid,
+    cells: Array2D<Cell>,
     cur_turn: Team,
     num_teams: usize,
-    num_in_row: usize,
-    // num_rows is determined by the length of `cells`.
-    num_cols: usize,
+    winning_length: usize,
 }
 
 impl GameState {
     pub fn default() -> GameState {
-        GameState {
-            cells: GameState::create_empty_grid(DEFAULT_NUM_ROWS, DEFAULT_NUM_COLS),
-            cur_turn: DEFAULT_FIRST_TURN,
-            num_teams: DEFAULT_NUM_TEAMS,
-            num_cols: DEFAULT_NUM_COLS,
-            num_in_row: DEFAULT_NUM_IN_ROW,
-        }
+        GameState::new(
+            DEFAULT_FIRST_TURN,
+            DEFAULT_NUM_TEAMS,
+            DEFAULT_NUM_ROWS,
+            DEFAULT_NUM_COLUMNS,
+            DEFAULT_WINNING_LENGTH,
+        )
+        .unwrap()
     }
 
     pub fn new(
         first_turn: Team,
         num_teams: usize,
         num_rows: usize,
-        num_cols: usize,
-        num_in_row: usize,
+        num_columns: usize,
+        winning_length: usize,
     ) -> Result<GameState, Error> {
         if first_turn.0 > num_teams {
             return Err(Error::InvalidTeam);
         }
+        let rows = GameState::create_empty_grid_rows(num_rows, num_columns);
         Ok(GameState {
-            cells: GameState::create_empty_grid(num_rows, num_cols),
+            cells: Array2D::from_rows(&rows),
             num_teams,
             cur_turn: first_turn,
-            num_cols,
-            num_in_row,
+            winning_length,
         })
     }
 
+    #[allow(dead_code)]
     pub fn num_rows(&self) -> usize {
-        self.cells.len()
+        self.cells.num_rows()
     }
 
-    pub fn num_cols(&self) -> usize {
-        self.num_cols
-    }
-
-    pub fn num_in_row(&self) -> usize {
-        self.num_in_row
-    }
-
-    pub fn grid(&self) -> &Grid {
-        &self.cells
+    pub fn num_columns(&self) -> usize {
+        self.cells.num_columns()
     }
 
     pub fn cur_turn(&self) -> Team {
         self.cur_turn
     }
 
-    pub fn drop_chip(&mut self, team: Team, col: usize) -> Result<(), Error> {
+    pub fn drop_chip(&mut self, team: Team, column: usize) -> Result<(), Error> {
         if self.game_over() {
             return Err(Error::GameOver);
         }
         if self.cur_turn != team {
             return Err(Error::NotThatTeamsTurn);
         }
-        self.drop_chip_cells(col)?;
+        self.drop_chip_cells(column)?;
         self.cur_turn = self.next_turn();
         Ok(())
     }
@@ -121,9 +111,9 @@ impl GameState {
 
     pub fn to_string_arr(&self) -> Vec<String> {
         self.cells
-            .iter()
-            .map(|row| {
-                row.iter()
+            .rows_iter()
+            .map(|row_iter| {
+                row_iter
                     .map(|&cell| GameState::cell_to_char(cell))
                     .collect()
             })
@@ -131,30 +121,41 @@ impl GameState {
     }
 
     fn has_won_vertically(&self, team: Team) -> bool {
-        self.cells.windows(self.num_in_row).any(|rows| {
-            (0..self.num_cols).any(|index| rows.iter().all(|row| row[index] == Some(team)))
+        self.cells.as_columns().iter().any(|column| {
+            column
+                .windows(self.winning_length)
+                .any(|window| self.team_won_in_sequence(window.iter(), team))
         })
+        // self.cells.windows(self.winning_length).any(|rows| {
+        //     (0..self.num_columns).any(|index| rows.iter().all(|row| row[index] == Some(team)))
+        // })
     }
 
     fn has_won_horizontally(&self, team: Team) -> bool {
-        self.cells.iter().any(|row| {
-            row.windows(self.num_in_row)
-                .any(|slice| slice.iter().all(|&c| c == Some(team)))
+        self.cells.as_rows().iter().any(|row| {
+            row.windows(self.winning_length)
+                .any(|window| self.team_won_in_sequence(window.iter(), team))
         })
+        // self.cells.iter().any(|row| {
+        //     row.windows(self.winning_length)
+        //         .any(|slice| slice.iter().all(|&c| c == Some(team)))
+        // })
     }
 
     fn has_won_diagonally(&self, team: Team) -> bool {
-        self.cells.windows(self.num_in_row).any(|rows| {
-            (0..self.num_cols - self.num_in_row + 1).any(|offset| {
-                rows.iter()
-                    .enumerate()
-                    .all(|(index, row)| row[offset + index] == Some(team))
-                    || rows
-                        .iter()
+        self.cells
+            .as_rows()
+            .windows(self.winning_length)
+            .any(|rows| {
+                (0..self.cells.num_columns() - self.winning_length + 1).any(|offset| {
+                    rows.iter()
                         .enumerate()
-                        .all(|(index, row)| row[offset + self.num_in_row - index - 1] == Some(team))
+                        .all(|(index, row)| row[offset + index] == Some(team))
+                        || rows.iter().enumerate().all(|(index, row)| {
+                            row[offset + self.winning_length - index - 1] == Some(team)
+                        })
+                })
             })
-        })
     }
 
     fn cell_to_char(cell: Cell) -> char {
@@ -174,28 +175,48 @@ impl GameState {
         Team(next_team_num)
     }
 
-    fn drop_chip_cells(&mut self, col: usize) -> Result<(), Error> {
-        if col >= self.num_cols {
+    fn drop_chip_cells(&mut self, column: usize) -> Result<(), Error> {
+        if column >= self.cells.num_columns() {
             return Err(Error::OutOfBounds);
         }
-        let row = self.highest_unfilled_row(col)?;
-        self.cells[row][col] = Some(self.cur_turn);
+        let row = self.highest_unfilled_row(column)?;
+        self.cells[(row, column)] = Some(self.cur_turn);
         Ok(())
     }
 
-    fn highest_unfilled_row(&self, col: usize) -> Result<usize, Error> {
+    fn highest_unfilled_row(&self, column: usize) -> Result<usize, Error> {
         self.cells
-            .iter()
+            .column_iter(column)
             .enumerate()
-            .find(|(_, row)| row[col] == None)
+            .find(|(_, cell)| cell.is_none())
             .map(|(index, _)| index)
             .ok_or(Error::ColumnFull)
+
+        // self.cells
+        //     .rows_iter()
+        //     .enumerate()
+        //     .find(|(_, row_iter)| row[column] == None)
+        //     .map(|(index, _)| index)
+        //     .ok_or(Error::ColumnFull)
     }
 
-    fn create_empty_grid(num_rows: usize, num_cols: usize) -> Grid {
+    fn create_empty_grid_rows(num_rows: usize, num_columns: usize) -> Vec<Vec<Cell>> {
         (0..num_rows)
-            .map(|_| (0..num_cols).map(|_| None).collect())
+            .map(|_| (0..num_columns).map(|_| None).collect())
             .collect()
+    }
+
+    // fn team_won_in_sequence(&self, sequence: &[Cell], team: Team) -> bool {
+    //     sequence
+    //         .windows(self.winning_length)
+    //         .any(|window| window.iter().all(|cell| cell == &Some(team)))
+    // }
+
+    fn team_won_in_sequence<'a, I>(&'a self, mut sequence_iter: I, team: Team) -> bool
+    where
+        I: Iterator<Item = &'a Cell>,
+    {
+        sequence_iter.all(|cell| cell == &Some(team))
     }
 }
 

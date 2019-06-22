@@ -1,5 +1,5 @@
 pub mod cli;
-pub mod game;
+mod game;
 
 fn main() {
     cli::run();

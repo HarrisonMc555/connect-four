@@ -1,12 +1,12 @@
-use game::*;
+use crate::game::*;
 use std::io;
 
 struct Args {
     num_teams: usize,
-    num_rows: usize,
-    num_cols: usize,
-    num_in_row: usize,
     first_turn: Team,
+    num_rows: usize,
+    num_columns: usize,
+    winning_length: usize,
 }
 
 pub fn run() {
@@ -24,7 +24,7 @@ fn play_turn(game: &mut GameState) {
     let team = game.cur_turn();
     println!("{}'s turn:", team);
     loop {
-        let col = get_usize_from_user_in_range("the column to drop tile in", 0, game.num_cols());
+        let col = get_usize_from_user_in_range("the column to drop tile in", 0, game.num_columns());
         match game.drop_chip(team, col) {
             Ok(_) => break,
             Err(e) => print_error(e),
@@ -57,11 +57,11 @@ fn grid_string(game: &GameState) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    let header: String = (0..game.num_cols())
+    let header: String = (0..game.num_columns())
         .map(|i| format!("{:X}", i))
         .collect::<Vec<_>>()
         .join(" ");
-    let lines = "-".repeat(game.num_cols() * 2 - 1);
+    let lines = "-".repeat(game.num_columns() * 2 - 1);
     format!("{}\n{}\n{}", header, lines, grid_s)
 }
 
@@ -89,8 +89,8 @@ fn get_game_from_user() -> GameState {
                 a.first_turn,
                 a.num_teams,
                 a.num_rows,
-                a.num_cols,
-                a.num_in_row,
+                a.num_columns,
+                a.winning_length,
             ),
             None => Ok(GameState::default()),
         };
@@ -110,14 +110,14 @@ fn get_args_from_user() -> Option<Args> {
     }
     let num_teams = get_usize_from_user_in_range("the number of teams", 0, 16);
     let num_rows = get_usize_from_user("the number of rows");
-    let num_cols = get_usize_from_user("the number of columns");
-    let num_in_row = get_usize_from_user("the number in a row to win");
+    let num_columns = get_usize_from_user("the number of columns");
+    let winning_length = get_usize_from_user("the number of consecutive tiles you need to win");
     let first_turn = get_usize_from_user_in_range("the team to go first", 0, num_teams);
     Some(Args {
         num_teams,
         num_rows,
-        num_cols,
-        num_in_row,
+        num_columns,
+        winning_length,
         first_turn: Team::new(first_turn),
     })
 }
