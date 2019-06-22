@@ -44,10 +44,7 @@ pub struct GameState {
 impl GameState {
     pub fn default() -> GameState {
         GameState {
-            cells: GameState::create_empty_grid(
-                DEFAULT_NUM_ROWS,
-                DEFAULT_NUM_COLS,
-            ),
+            cells: GameState::create_empty_grid(DEFAULT_NUM_ROWS, DEFAULT_NUM_COLS),
             cur_turn: DEFAULT_FIRST_TURN,
             num_teams: DEFAULT_NUM_TEAMS,
             num_cols: DEFAULT_NUM_COLS,
@@ -129,13 +126,13 @@ impl GameState {
                 row.iter()
                     .map(|&cell| GameState::cell_to_char(cell))
                     .collect()
-            }).collect()
+            })
+            .collect()
     }
 
     fn has_won_vertically(&self, team: Team) -> bool {
         self.cells.windows(self.num_in_row).any(|rows| {
-            (0..self.num_cols)
-                .any(|index| rows.iter().all(|row| row[index] == Some(team)))
+            (0..self.num_cols).any(|index| rows.iter().all(|row| row[index] == Some(team)))
         })
     }
 
@@ -152,9 +149,10 @@ impl GameState {
                 rows.iter()
                     .enumerate()
                     .all(|(index, row)| row[offset + index] == Some(team))
-                    || rows.iter().enumerate().all(|(index, row)| {
-                        row[offset + self.num_in_row - index - 1] == Some(team)
-                    })
+                    || rows
+                        .iter()
+                        .enumerate()
+                        .all(|(index, row)| row[offset + self.num_in_row - index - 1] == Some(team))
             })
         })
     }

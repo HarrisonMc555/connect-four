@@ -24,11 +24,7 @@ fn play_turn(game: &mut GameState) {
     let team = game.cur_turn();
     println!("{}'s turn:", team);
     loop {
-        let col = get_usize_from_user_in_range(
-            "the column to drop tile in",
-            0,
-            game.num_cols(),
-        );
+        let col = get_usize_from_user_in_range("the column to drop tile in", 0, game.num_cols());
         match game.drop_chip(team, col) {
             Ok(_) => break,
             Err(e) => print_error(e),
@@ -49,16 +45,23 @@ fn display_board(game: &GameState) {
 }
 
 fn grid_string(game: &GameState) -> String {
-    let grid_s = game.to_string_arr()
+    let grid_s = game
+        .to_string_arr()
         .into_iter()
         .rev()
-        .map(|row| row.chars()
-             .map(|c| char::to_string(&c)).collect::<Vec<_>>().join(" "))
+        .map(|row| {
+            row.chars()
+                .map(|c| char::to_string(&c))
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
         .collect::<Vec<_>>()
         .join("\n");
-    let header: String = (0..game.num_cols()).map(|i| format!("{:X}",
-                                                              i)).collect::<Vec<_>>().join(" ");
-    let lines = "-".repeat(game.num_cols()*2 - 1);
+    let header: String = (0..game.num_cols())
+        .map(|i| format!("{:X}", i))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let lines = "-".repeat(game.num_cols() * 2 - 1);
     format!("{}\n{}\n{}", header, lines, grid_s)
 }
 
@@ -109,8 +112,7 @@ fn get_args_from_user() -> Option<Args> {
     let num_rows = get_usize_from_user("the number of rows");
     let num_cols = get_usize_from_user("the number of columns");
     let num_in_row = get_usize_from_user("the number in a row to win");
-    let first_turn =
-        get_usize_from_user_in_range("the team to go first", 0, num_teams);
+    let first_turn = get_usize_from_user_in_range("the team to go first", 0, num_teams);
     Some(Args {
         num_teams,
         num_rows,
@@ -153,11 +155,7 @@ fn get_usize_from_user(message: &str) -> usize {
     }
 }
 
-fn get_usize_from_user_in_range(
-    message: &str,
-    min_val: usize,
-    max_val: usize,
-) -> usize {
+fn get_usize_from_user_in_range(message: &str, min_val: usize, max_val: usize) -> usize {
     if min_val + 1 > max_val {
         panic!("Impossible range");
     }
@@ -174,15 +172,13 @@ fn get_usize_from_user_in_range(
             .read_line(&mut input)
             .expect("failed to read stdin");
         match input.trim().parse() {
-            Ok(n) => if min_val <= n && n < max_val {
-                return n;
-            } else {
-                println!(
-                    "Not between {} and {}, try again.",
-                    min_val,
-                    max_val - 1
-                );
-            },
+            Ok(n) => {
+                if min_val <= n && n < max_val {
+                    return n;
+                } else {
+                    println!("Not between {} and {}, try again.", min_val, max_val - 1);
+                }
+            }
             Err(_) => println!("Not a valid number, try again."),
         }
     }

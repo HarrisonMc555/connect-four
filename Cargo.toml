@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Harrison McCullough <mccullough.harrison@gmail.com>"]
 
 [dependencies]
+array2d = "0.2"
