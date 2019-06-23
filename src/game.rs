@@ -106,7 +106,7 @@ impl GameState {
 
     pub fn who_won(&self) -> Option<Team> {
         (0..self.num_teams)
-            .map(|team_num| Team(team_num))
+            .map(Team)
             .find(|&team| self.has_won(team))
     }
 
@@ -238,7 +238,7 @@ impl GameState {
     fn cell_to_char(cell: Cell) -> char {
         if let Some(team) = cell {
             if team.0 > MAX_PRINTABLE_TEAMS {
-                panic!("Cannot convert team {} to a char");
+                panic!("Cannot convert team {} to a char", team);
             }
         }
         match cell {
