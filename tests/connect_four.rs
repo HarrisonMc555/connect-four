@@ -113,12 +113,35 @@ fn win_diagonally_up_left() -> Result<(), Error> {
 #[test]
 fn drop_out_of_bounds() {
     let mut game = GameState::default();
+    let result = game.drop_chip(Team::new(0), 0);
+    assert!(result.is_ok());
+    let result = game.drop_chip(Team::new(1), 1);
+    assert!(result.is_ok());
     let result = game.drop_chip(Team::new(0), DEFAULT_NUM_COLUMNS);
     assert_eq!(result, Err(Error::OutOfBounds));
     let result = game.drop_chip(Team::new(0), DEFAULT_NUM_COLUMNS + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
     let result = game.drop_chip(Team::new(0), DEFAULT_NUM_COLUMNS * 2 + 1);
     assert_eq!(result, Err(Error::OutOfBounds));
+    let result = game.drop_chip(Team::new(0), 0);
+    assert!(result.is_ok());
+    let result = game.drop_chip(Team::new(1), 1);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn drop_with_wrong_team() {
+    let mut game = GameState::default();
+    let result = game.drop_chip(Team::new(0), 0);
+    assert!(result.is_ok());
+    let result = game.drop_chip(Team::new(1), 1);
+    assert!(result.is_ok());
+    let result = game.drop_chip(Team::new(1), 2);
+    assert_eq!(result, Err(Error::NotThatTeamsTurn));
+    let result = game.drop_chip(Team::new(0), 0);
+    assert!(result.is_ok());
+    let result = game.drop_chip(Team::new(1), 1);
+    assert!(result.is_ok());
 }
 
 #[test]
