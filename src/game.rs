@@ -122,28 +122,44 @@ impl GameState {
     }
 
     fn has_won_vertically(&self, team: Team) -> bool {
-        self.cells.as_columns().iter().any(|column| {
-            column
-                .windows(self.winning_length)
-                .any(|window| self.team_won_in_sequence(window.iter(), team))
-        })
-    }
-
-    fn has_won_horizontally2(&self, team: Team) -> bool {
-        self.cells.as_rows().iter().any(|row| {
-            row.windows(self.winning_length)
-                .any(|window| self.team_won_in_sequence(window.iter(), team))
-        })
-    }
-
-    fn has_won_horizontally(&self, team: Team) -> bool {
-        self.coordinates()
-            .filter_map(|(row, column)| self.horizontal_sequence_coordinates(row, column))
+        self.vertical_starting_coordinates()
+            .map(|(row, column)| self.vertical_sequence_coordinates(row, column))
             .any(|coordinates| self.won_with_coordinates(coordinates, team))
     }
 
-    fn coordinates(&self) -> impl Iterator<Item = (usize, usize)> {
-        iproduct!(0..self.num_rows(), 0..self.num_columns())
+    fn has_won_horizontally(&self, team: Team) -> bool {
+        self.horizontal_starting_coordinates()
+            .map(|(row, column)| self.horizontal_sequence_coordinates(row, column))
+            .any(|coordinates| self.won_with_coordinates(coordinates, team))
+    }
+
+    fn has_won_diagonally(&self, team: Team) -> bool {
+        self.has_won_diagonally_up_left(team) || self.has_won_diagonally_up_right(team)
+        // self.cells
+        //     .as_rows()
+        //     .windows(self.winning_length)
+        //     .any(|rows| {
+        //         (0..self.cells.num_columns() - self.winning_length + 1).any(|offset| {
+        //             rows.iter()
+        //                 .enumerate()
+        //                 .all(|(index, row)| row[offset + index] == Some(team))
+        //                 || rows.iter().enumerate().all(|(index, row)| {
+        //                     row[offset + self.winning_length - index - 1] == Some(team)
+        //                 })
+        //         })
+        //     })
+    }
+
+    fn has_won_diagonally_up_left(&self, team: Team) -> bool {
+        self.diagonal_up_left_starting_coordinates()
+            .map(|(row, column)| self.diagonal_up_left_sequence_coordinates(row, column))
+            .any(|coordinates| self.won_with_coordinates(coordinates, team))
+    }
+
+    fn has_won_diagonally_up_right(&self, team: Team) -> bool {
+        self.diagonal_up_right_starting_coordinates()
+            .map(|(row, column)| self.diagonal_up_right_sequence_coordinates(row, column))
+            .any(|coordinates| self.won_with_coordinates(coordinates, team))
     }
 
     fn won_with_coordinates<I>(&self, mut coordinates: I, team: Team) -> bool
@@ -153,17 +169,20 @@ impl GameState {
         coordinates.all(|coords| self.cells[coords] == Some(team))
     }
 
-    fn horizontal_sequence_coordinates(
+    fn vertical_starting_coordinates(&self) -> impl Iterator<Item = (usize, usize)> {
+        iproduct!(
+            0..=(self.num_rows() - self.winning_length),
+            0..self.num_columns()
+        )
+    }
+
+    fn vertical_sequence_coordinates(
         &self,
         row: usize,
         column: usize,
-    ) -> Option<impl Iterator<Item = (usize, usize)>> {
-        let last_column = column + self.winning_length;
-        if last_column >= self.num_columns() {
-            None
-        } else {
-            Some((column..last_column).map(move |c| (row, c)))
-        }
+    ) -> impl Iterator<Item = (usize, usize)> {
+        let last_row = row + self.winning_length;
+        (row..last_row).map(move |r| (r, column))
     }
 
     fn horizontal_starting_coordinates(&self) -> impl Iterator<Item = (usize, usize)> {
@@ -173,20 +192,47 @@ impl GameState {
         )
     }
 
-    fn has_won_diagonally(&self, team: Team) -> bool {
-        self.cells
-            .as_rows()
-            .windows(self.winning_length)
-            .any(|rows| {
-                (0..self.cells.num_columns() - self.winning_length + 1).any(|offset| {
-                    rows.iter()
-                        .enumerate()
-                        .all(|(index, row)| row[offset + index] == Some(team))
-                        || rows.iter().enumerate().all(|(index, row)| {
-                            row[offset + self.winning_length - index - 1] == Some(team)
-                        })
-                })
-            })
+    fn horizontal_sequence_coordinates(
+        &self,
+        row: usize,
+        column: usize,
+    ) -> impl Iterator<Item = (usize, usize)> {
+        let last_column = column + self.winning_length;
+        (column..last_column).map(move |c| (row, c))
+    }
+
+    fn diagonal_up_left_starting_coordinates(&self) -> impl Iterator<Item = (usize, usize)> {
+        iproduct!(
+            0..=(self.num_rows() - self.winning_length),
+            0..=(self.num_columns() - self.winning_length)
+        )
+    }
+
+    fn diagonal_up_left_sequence_coordinates(
+        &self,
+        row: usize,
+        column: usize,
+    ) -> impl Iterator<Item = (usize, usize)> {
+        let last_row = row + self.winning_length;
+        let last_column = column + self.winning_length;
+        (row..last_row).zip(column..last_column)
+    }
+
+    fn diagonal_up_right_starting_coordinates(&self) -> impl Iterator<Item = (usize, usize)> {
+        iproduct!(
+            self.winning_length..self.num_rows(),
+            0..=(self.num_columns() - self.winning_length)
+        )
+    }
+
+    fn diagonal_up_right_sequence_coordinates(
+        &self,
+        row: usize,
+        column: usize,
+    ) -> impl Iterator<Item = (usize, usize)> {
+        let first_row = row - self.winning_length;
+        let last_column = column + self.winning_length;
+        (first_row..row).rev().zip(column..last_column)
     }
 
     fn cell_to_char(cell: Cell) -> char {
@@ -228,13 +274,6 @@ impl GameState {
         (0..num_rows)
             .map(|_| (0..num_columns).map(|_| None).collect())
             .collect()
-    }
-
-    fn team_won_in_sequence<'a, I>(&'a self, mut sequence_iter: I, team: Team) -> bool
-    where
-        I: Iterator<Item = &'a Cell>,
-    {
-        sequence_iter.all(|cell| cell == &Some(team))
     }
 }
 
